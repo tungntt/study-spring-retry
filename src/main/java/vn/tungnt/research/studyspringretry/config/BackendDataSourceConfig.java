@@ -1,25 +1,22 @@
 package vn.tungnt.research.studyspringretry.config;
 
-import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
-import vn.tungnt.research.studyspringretry.model.backend.Sensor;
 
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * @author java dev be team on 2019-04-13O
@@ -36,7 +33,6 @@ public class BackendDataSourceConfig {
 
     @Bean(name = "backendJpaProperties")
     @ConfigurationProperties(prefix = "backend.jpa")
-    @Primary
     public JpaProperties backendJpaProperties(){
        return new JpaProperties();
     }
@@ -56,19 +52,17 @@ public class BackendDataSourceConfig {
     public LocalContainerEntityManagerFactoryBean backendEntityManagerFactory(@Qualifier("backendDataSource") DataSource backendDataSource) {
         LocalContainerEntityManagerFactoryBean factoryBean = new LocalContainerEntityManagerFactoryBean();
         factoryBean.setDataSource(backendDataSource);
-
-        factoryBean.setJpaVendorAdapter(this.jpaVendorAdapter());
-        factoryBean.setJpaPropertyMap(this.backendJpaProperties().getProperties());
-
+        factoryBean.setPackagesToScan(PACKAGE_TO_SCAN);
+        factoryBean.getJpaPropertyMap().putAll(this.backendJpaProperties().getProperties());
+        factoryBean.getJpaPropertyMap().putAll(this.getVendorProperties());
         factoryBean.setPersistenceUnitName("backend");
 
-        factoryBean.setPackagesToScan(PACKAGE_TO_SCAN);
-
+        factoryBean.setJpaVendorAdapter(this.createJpaVendorAdapter());
         factoryBean.afterPropertiesSet();
         return factoryBean;
     }
 
-    private JpaVendorAdapter jpaVendorAdapter() {
+    private JpaVendorAdapter createJpaVendorAdapter() {
         HibernateJpaVendorAdapter adapter = new HibernateJpaVendorAdapter();
         adapter.setGenerateDdl(this.backendJpaProperties().isGenerateDdl());
         adapter.setShowSql(this.backendJpaProperties().isShowSql());
@@ -77,12 +71,11 @@ public class BackendDataSourceConfig {
         return adapter;
     }
 
-//    @Bean(name = "backendEntityManagerFactory")
-//    public LocalContainerEntityManagerFactoryBean backendEntityManagerFactory(EntityManagerFactoryBuilder builder, @Qualifier("backendDataSource") DataSource dataSource) {
-//        LocalContainerEntityManagerFactoryBean backend = builder.dataSource(dataSource).packages(Sensor.class).persistenceUnit("backend").build();
-//        return backend;
-//    }
-
+    private Map<String, Object> getVendorProperties() {
+        Map<String, Object> vendorProperties = new LinkedHashMap();
+        vendorProperties.putAll(this.backendJpaProperties().getHibernateProperties(this.backendDataSource()));
+        return vendorProperties;
+    }
 
     @Bean(name = "backendTransactionManager")
     public PlatformTransactionManager backendTransactionManager(@Qualifier("backendEntityManagerFactory") EntityManagerFactory backendEntityManagerFactory) {
