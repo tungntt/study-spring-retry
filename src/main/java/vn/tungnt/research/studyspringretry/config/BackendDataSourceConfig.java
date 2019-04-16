@@ -1,5 +1,6 @@
 package vn.tungnt.research.studyspringretry.config;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
@@ -45,7 +46,10 @@ public class BackendDataSourceConfig {
 
     @Bean(name = "backendDataSource")
     public DataSource backendDataSource() {
-        return this.backendDSProperties().initializeDataSourceBuilder().build();
+        HikariDataSource dataSource = (HikariDataSource) this.backendDSProperties().initializeDataSourceBuilder().build();
+        dataSource.setPoolName("backendCP");
+        dataSource.setReadOnly(true);
+        return dataSource;
     }
 
     @Bean(name = "backendEntityManagerFactory")

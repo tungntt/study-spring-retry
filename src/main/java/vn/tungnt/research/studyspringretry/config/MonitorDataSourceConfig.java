@@ -1,5 +1,6 @@
 package vn.tungnt.research.studyspringretry.config;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
@@ -49,7 +50,10 @@ public class MonitorDataSourceConfig {
     @Bean(name = "monitorDataSource")
     @Primary
     public DataSource monitorDataSource() {
-        return this.monitorDSProperties().initializeDataSourceBuilder().build();
+        HikariDataSource dataSource = (HikariDataSource) this.monitorDSProperties().initializeDataSourceBuilder().build();
+        dataSource.setPoolName("monitorCP");
+        dataSource.setReadOnly(true);
+        return dataSource;
     }
 
     @Bean(name = "monitorEntityManagerFactory")
