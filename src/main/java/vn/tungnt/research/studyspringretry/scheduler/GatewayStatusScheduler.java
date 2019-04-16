@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import vn.tungnt.research.studyspringretry.dto.GatewayStatusDTO;
 import vn.tungnt.research.studyspringretry.model.monitor.GatewayStatus;
 import vn.tungnt.research.studyspringretry.repository.monitor.GatewayStatusRepository;
 import vn.tungnt.research.studyspringretry.service.GatewayStatusImporter;
@@ -36,9 +35,9 @@ public class GatewayStatusScheduler {
     public void scheduleImportGwStatus(){
         log.info("******** BEGIN TO IMPORT GW STATUS ********");
         List<String> fakeGwId = this.getFakeGwId(9);
-        CompletableFuture<GatewayStatusDTO>[] completableTasks = new CompletableFuture[fakeGwId.size()];
+        CompletableFuture<Void>[] completableTasks = new CompletableFuture[fakeGwId.size()];
         for(int i = 0; i < fakeGwId.size(); i++) {
-            CompletableFuture<GatewayStatusDTO> future = this.importer.importStatus(fakeGwId.get(i));
+            CompletableFuture<Void> future = this.importer.importStatus(fakeGwId.get(i));
             completableTasks[i] = future;
         }
 
